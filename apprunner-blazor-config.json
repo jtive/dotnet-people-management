@@ -1,0 +1,38 @@
+{
+  "ServiceName": "personal-info-blazor",
+  "SourceConfiguration": {
+    "ImageRepository": {
+      "ImageIdentifier": "486151888818.dkr.ecr.us-east-2.amazonaws.com/personal-info-blazor:latest",
+      "ImageConfiguration": {
+        "Port": "8080",
+        "RuntimeEnvironmentVariables": {
+          "ASPNETCORE_ENVIRONMENT": "Production",
+          "ASPNETCORE_URLS": "http://+:8080",
+          "ApiSettings__BaseUrl": "https://6pz6yc2hhw.us-east-2.awsapprunner.com"
+        },
+        "StartCommand": "dotnet PersonalInfoBlazor.dll"
+      },
+      "ImageRepositoryType": "ECR"
+    },
+    "AutoDeploymentsEnabled": true
+  },
+  "InstanceConfiguration": {
+    "Cpu": "0.25 vCPU",
+    "Memory": "0.5 GB",
+    "InstanceRoleArn": "arn:aws:iam::486151888818:role/AppRunnerECRAccessRole2"
+  },
+  "Tags": [
+    {
+      "Key": "Environment",
+      "Value": "POC"
+    },
+    {
+      "Key": "Project",
+      "Value": "PersonalInfoSystem"
+    },
+    {
+      "Key": "Component",
+      "Value": "BlazorFrontend"
+    }
+  ]
+}
