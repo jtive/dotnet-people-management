@@ -1,0 +1,92 @@
+@using PersonalInfoShared.DTOs
+
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">@Person.FirstName @Person.LastName</h5>
+        <div>
+            <span class="badge bg-primary">Person</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Personal Information</h6>
+                <ul class="list-unstyled">
+                    <li><strong>First Name:</strong> @Person.FirstName</li>
+                    <li><strong>Last Name:</strong> @Person.LastName</li>
+                    <li><strong>Birth Date:</strong> @Person.BirthDate</li>
+                    <li><strong>SSN:</strong> @Person.SSN</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Contact Information</h6>
+                @if (Person.Addresses.Any())
+                {
+                    <ul class="list-unstyled">
+                        @foreach (var address in Person.Addresses.Take(2))
+                        {
+                            <li>
+                                <strong>@address.AddressType:</strong><br />
+                                @address.StreetAddress<br />
+                                @address.City, @address.State @address.ZipCode
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">No addresses on file</p>
+                }
+            </div>
+        </div>
+        
+        @if (Person.CreditCards.Any())
+        {
+            <div class="mt-3">
+                <h6>Credit Cards</h6>
+                <div class="row">
+                    @foreach (var card in Person.CreditCards.Take(3))
+                    {
+                        <div class="col-md-4">
+                            <div class="border rounded p-2">
+                                <strong>@card.CardType</strong><br />
+                                @card.LastFourDigits<br />
+                                <small class="text-muted">Expires: @card.ExpirationMonth/@card.ExpirationYear</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        
+        <div class="mt-3">
+            <small class="text-muted">
+                Created: @Person.CreatedAt.ToString("MM/dd/yyyy HH:mm")
+                @if (Person.UpdatedAt != Person.CreatedAt)
+                {
+                    <span> | Updated: @Person.UpdatedAt.ToString("MM/dd/yyyy HH:mm")</span>
+                }
+            </small>
+        </div>
+    </div>
+    <div class="card-footer">
+        <div class="btn-group" role="group">
+            <button class="btn btn-sm btn-outline-primary" @onclick="@(() => OnEdit.InvokeAsync(Person.Id))">
+                <i class="oi oi-pencil"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-outline-info" @onclick="@(() => OnView.InvokeAsync(Person.Id))">
+                <i class="oi oi-eye"></i> View Details
+            </button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="@(() => OnDelete.InvokeAsync(Person.Id))">
+                <i class="oi oi-trash"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public PersonDto Person { get; set; } = new();
+    [Parameter] public EventCallback<Guid> OnEdit { get; set; }
+    [Parameter] public EventCallback<Guid> OnView { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+}

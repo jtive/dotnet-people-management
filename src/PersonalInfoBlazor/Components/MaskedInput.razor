@@ -1,0 +1,265 @@
+@using System.Text.RegularExpressions
+
+<div class="form-group">
+    <label for="@Id" class="form-label">@Label</label>
+    <input type="text" 
+           class="form-control @CssClass" 
+           id="@Id"
+           @bind="DisplayValue"
+           @bind:event="oninput"
+           @onblur="OnBlur"
+           @onfocus="OnFocus"
+           placeholder="@Placeholder"
+           disabled="@Disabled" />
+    @if (!string.IsNullOrEmpty(HelpText))
+    {
+        <div class="form-text">@HelpText</div>
+    }
+    @if (!string.IsNullOrEmpty(ValidationMessage))
+    {
+        <div class="invalid-feedback d-block">@ValidationMessage</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+    [Parameter] public string HelpText { get; set; } = string.Empty;
+    [Parameter] public string ValidationMessage { get; set; } = string.Empty;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public InputType Type { get; set; } = InputType.Text;
+
+    private string _internalValue = string.Empty;
+    private string _displayValue = string.Empty;
+    private bool _isFocused = false;
+
+    private string DisplayValue
+    {
+        get => _displayValue;
+        set
+        {
+            if (_displayValue != value)
+            {
+                _displayValue = value;
+                
+                // For non-masked input types, just pass through
+                if (Type == InputType.Text)
+                {
+                    _internalValue = value;
+                    ValueChanged.InvokeAsync(value);
+                    return;
+                }
+                
+                // Extract only the digits for processing
+                var digitsOnly = Regex.Replace(value, @"[^\d]", "");
+                
+                // Limit the length based on input type
+                if (Type == InputType.SSN && digitsOnly.Length > 9)
+                    digitsOnly = digitsOnly.Substring(0, 9);
+                else if (Type == InputType.CreditCard && digitsOnly.Length > 16)
+                    digitsOnly = digitsOnly.Substring(0, 16);
+                
+                // Always update internal value and format display when digits change
+                if (digitsOnly != _internalValue || _displayValue != FormatValue(digitsOnly))
+                {
+                    _internalValue = digitsOnly;
+                    var formatted = FormatValue(digitsOnly);
+                    _displayValue = formatted;
+                    ValueChanged.InvokeAsync(digitsOnly);
+                }
+            }
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Only update if the incoming Value is different from our current internal value
+        // This prevents the parent from resetting our user input
+        var newValue = Value ?? string.Empty;
+        if (newValue != _internalValue && !string.IsNullOrEmpty(_internalValue))
+        {
+            return; // Ignore parameter update - user has input
+        }
+        
+        if (newValue != _internalValue)
+        {
+            _internalValue = newValue;
+            // Show masked value initially (when not focused)
+            _displayValue = _isFocused ? FormatValue(_internalValue) : MaskValue(_internalValue);
+        }
+    }
+
+    private async Task OnFocus()
+    {
+        _isFocused = true;
+        // Show formatted value when focused
+        _displayValue = FormatValue(_internalValue);
+        await ValueChanged.InvokeAsync(_internalValue);
+    }
+
+    private async Task OnBlur()
+    {
+        _isFocused = false;
+        // Show masked value when focus is lost
+        _displayValue = MaskValue(_internalValue);
+        await ValueChanged.InvokeAsync(_internalValue);
+    }
+
+    private string MaskValue(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return Type switch
+        {
+            InputType.SSN => MaskSSN(value),
+            InputType.CreditCard => MaskCreditCard(value),
+            _ => value
+        };
+    }
+
+    private string MaskSSN(string ssn)
+    {
+        if (string.IsNullOrEmpty(ssn))
+            return string.Empty;
+
+        var digitsOnly = Regex.Replace(ssn, @"[^\d]", "");
+        if (digitsOnly.Length != 9)
+            return string.Empty;
+
+        // Show only last 4 digits: ***-**-1234
+        var lastFour = digitsOnly.Substring(5, 4);
+        return $"***-**-{lastFour}";
+    }
+
+    private string MaskCreditCard(string cardNumber)
+    {
+        if (string.IsNullOrEmpty(cardNumber))
+            return string.Empty;
+
+        var digitsOnly = Regex.Replace(cardNumber, @"[^\d]", "");
+        if (digitsOnly.Length < 4)
+            return string.Empty;
+
+        // Show only last 4 digits: ****-****-****-1234
+        var lastFour = digitsOnly.Substring(digitsOnly.Length - 4);
+        return $"****-****-****-{lastFour}";
+    }
+
+    private string CleanInput(string input)
+    {
+        return Type switch
+        {
+            InputType.SSN => Regex.Replace(input, @"[^\d]", ""),
+            InputType.CreditCard => Regex.Replace(input, @"[^\d]", ""),
+            InputType.Phone => Regex.Replace(input, @"[^\d]", ""),
+            _ => input
+        };
+    }
+
+    private string FormatValue(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        return Type switch
+        {
+            InputType.SSN => FormatSSN(value),
+            InputType.CreditCard => FormatCreditCard(value),
+            InputType.Phone => FormatPhone(value),
+            _ => value
+        };
+    }
+
+    private string FormatSSN(string ssn)
+    {
+        if (string.IsNullOrEmpty(ssn))
+            return string.Empty;
+
+        var digitsOnly = Regex.Replace(ssn, @"[^\d]", "");
+        
+        if (digitsOnly.Length == 0)
+            return string.Empty;
+        
+        if (digitsOnly.Length <= 3)
+            return digitsOnly;
+        
+        if (digitsOnly.Length <= 5)
+            return $"{digitsOnly.Substring(0, 3)}-{digitsOnly.Substring(3)}";
+        
+        return $"{digitsOnly.Substring(0, 3)}-{digitsOnly.Substring(3, 2)}-{digitsOnly.Substring(5, Math.Min(4, digitsOnly.Length - 5))}";
+    }
+
+    private string FormatCreditCard(string cardNumber)
+    {
+        if (string.IsNullOrEmpty(cardNumber))
+            return string.Empty;
+
+        var digitsOnly = Regex.Replace(cardNumber, @"[^\d]", "");
+        
+        if (digitsOnly.Length == 0)
+            return string.Empty;
+
+        // Format based on card type
+        switch (digitsOnly.Length)
+        {
+            case 13: // Visa (some older cards)
+            case 16: // Visa, MasterCard, Discover
+                if (digitsOnly.Length <= 4)
+                    return digitsOnly;
+                if (digitsOnly.Length <= 8)
+                    return $"{digitsOnly.Substring(0, 4)}-{digitsOnly.Substring(4)}";
+                if (digitsOnly.Length <= 12)
+                    return $"{digitsOnly.Substring(0, 4)}-{digitsOnly.Substring(4, 4)}-{digitsOnly.Substring(8)}";
+                return $"{digitsOnly.Substring(0, 4)}-{digitsOnly.Substring(4, 4)}-{digitsOnly.Substring(8, 4)}-{digitsOnly.Substring(12)}";
+            
+            case 15: // American Express
+                if (digitsOnly.Length <= 4)
+                    return digitsOnly;
+                if (digitsOnly.Length <= 10)
+                    return $"{digitsOnly.Substring(0, 4)}-{digitsOnly.Substring(4)}";
+                return $"{digitsOnly.Substring(0, 4)}-{digitsOnly.Substring(4, 6)}-{digitsOnly.Substring(10)}";
+            
+            default:
+                // Generic formatting for other lengths
+                var formatted = string.Empty;
+                for (int i = 0; i < digitsOnly.Length; i += 4)
+                {
+                    if (i > 0) formatted += "-";
+                    formatted += digitsOnly.Substring(i, Math.Min(4, digitsOnly.Length - i));
+                }
+                return formatted;
+        }
+    }
+
+    private string FormatPhone(string phone)
+    {
+        if (string.IsNullOrEmpty(phone))
+            return string.Empty;
+
+        var digitsOnly = Regex.Replace(phone, @"[^\d]", "");
+        
+        if (digitsOnly.Length == 0)
+            return string.Empty;
+        
+        if (digitsOnly.Length <= 3)
+            return $"({digitsOnly}";
+        
+        if (digitsOnly.Length <= 6)
+            return $"({digitsOnly.Substring(0, 3)}) {digitsOnly.Substring(3)}";
+        
+        return $"({digitsOnly.Substring(0, 3)}) {digitsOnly.Substring(3, 3)}-{digitsOnly.Substring(6)}";
+    }
+
+    public enum InputType
+    {
+        Text,
+        SSN,
+        CreditCard,
+        Phone
+    }
+}
