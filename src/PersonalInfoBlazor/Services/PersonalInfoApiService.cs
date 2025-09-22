@@ -36,20 +36,7 @@ public class PersonalInfoApiService : IPersonalInfoApiService
         var response = await _httpClient.GetAsync("/api/person");
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadAsStringAsync();
-        
-        // Log the raw JSON to see the date format
-        Console.WriteLine($"Raw JSON from API: {json}");
-        
-        try
-        {
-            return JsonSerializer.Deserialize<IEnumerable<PersonDto>>(json, _jsonOptions) ?? new List<PersonDto>();
-        }
-        catch (JsonException ex)
-        {
-            Console.WriteLine($"JSON Deserialization Error: {ex.Message}");
-            Console.WriteLine($"Problematic JSON: {json}");
-            throw;
-        }
+        return JsonSerializer.Deserialize<IEnumerable<PersonDto>>(json, _jsonOptions) ?? new List<PersonDto>();
     }
 
     public async Task<PersonDto?> GetPersonAsync(Guid id)
@@ -215,17 +202,21 @@ public class FlexibleDateTimeConverter : JsonConverter<DateTime>
         if (reader.TokenType == JsonTokenType.String)
         {
             var dateString = reader.GetString();
-            Console.WriteLine($"Trying to parse date string: '{dateString}'");
             
             if (string.IsNullOrEmpty(dateString))
                 return DateTime.MinValue;
+
+            // Handle masked data - if the date is masked, return a default date
+            if (dateString == "********" || dateString.StartsWith("***"))
+            {
+                return DateTime.MinValue; // Return default date for masked data
+            }
 
             // Try parsing with different formats
             foreach (var format in DateFormats)
             {
                 if (DateTime.TryParseExact(dateString, format, null, System.Globalization.DateTimeStyles.None, out var result))
                 {
-                    Console.WriteLine($"Successfully parsed date '{dateString}' using format '{format}' -> {result}");
                     return result;
                 }
             }
@@ -233,11 +224,9 @@ public class FlexibleDateTimeConverter : JsonConverter<DateTime>
             // Fallback to standard DateTime parsing
             if (DateTime.TryParse(dateString, out var fallbackResult))
             {
-                Console.WriteLine($"Successfully parsed date '{dateString}' using fallback parsing -> {fallbackResult}");
                 return fallbackResult;
             }
 
-            Console.WriteLine($"Failed to parse date: '{dateString}'");
             throw new JsonException($"Unable to parse date: {dateString}");
         }
 
