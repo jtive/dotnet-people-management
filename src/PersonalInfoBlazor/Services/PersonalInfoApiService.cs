@@ -15,7 +15,7 @@ public class PersonalInfoApiService : IPersonalInfoApiService
         // Check environment variable first, then configuration, then default
         var baseUrl = Environment.GetEnvironmentVariable("API_BASE_URL") 
                      ?? configuration["ApiSettings:BaseUrl"] 
-                     ?? "http://localhost:5188";
+                     ?? "https://6pz6yc2hhw.us-east-2.awsapprunner.com";
         _httpClient.BaseAddress = new Uri(baseUrl);
         
         _jsonOptions = new JsonSerializerOptions
