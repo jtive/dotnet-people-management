@@ -1,0 +1,204 @@
+@page "/persons/{Id:guid}"
+@using PersonalInfoBlazor.Services
+@using PersonalInfoShared.DTOs
+@inject IPersonalInfoApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>View Person - Personal Info System</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            @if (loading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading person details...</p>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Error</h4>
+                    <p>@errorMessage</p>
+                    <hr>
+                    <button class="btn btn-outline-danger" @onclick="GoBack">Go Back</button>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Person Details</h3>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary" @onclick="EditPerson">
+                                <i class="oi oi-pencil"></i> Edit
+                            </button>
+                            <button class="btn btn-outline-secondary" @onclick="GoBack">
+                                <i class="oi oi-arrow-left"></i> Back to List
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Personal Information</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Name:</strong></td>
+                                        <td>@person.FirstName @person.LastName</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Birth Date:</strong></td>
+                                        <td>@person.BirthDate.ToString("MMMM dd, yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Age:</strong></td>
+                                        <td>@CalculateAge(person.BirthDate) years old</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>SSN:</strong></td>
+                                        <td>@person.SSN</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>System Information</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Created:</strong></td>
+                                        <td>@person.CreatedAt.ToString("MMMM dd, yyyy 'at' h:mm tt")</td>
+                                    </tr>
+                                    @if (person.UpdatedAt != person.CreatedAt)
+                                    {
+                                        <tr>
+                                            <td><strong>Last Updated:</strong></td>
+                                            <td>@person.UpdatedAt.ToString("MMMM dd, yyyy 'at' h:mm tt")</td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td><strong>Person ID:</strong></td>
+                                        <td><code>@person.Id</code></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        @if (person.Addresses.Any())
+                        {
+                            <hr>
+                            <h5>Addresses (@person.Addresses.Count)</h5>
+                            <div class="row">
+                                @foreach (var address in person.Addresses)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border">
+                                            <div class="card-body">
+                                                <h6 class="card-title">@address.AddressType</h6>
+                                                <p class="card-text mb-1">@address.StreetAddress</p>
+                                                <p class="card-text mb-1">@address.City, @address.State @address.ZipCode</p>
+                                                <p class="card-text mb-0">@address.Country</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (person.CreditCards.Any())
+                        {
+                            <hr>
+                            <h5>Credit Cards (@person.CreditCards.Count)</h5>
+                            <div class="row">
+                                @foreach (var card in person.CreditCards)
+                                {
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border">
+                                            <div class="card-body">
+                                                <h6 class="card-title">@card.CardType</h6>
+                                                <p class="card-text mb-1">**** **** **** @card.LastFourDigits</p>
+                                                <p class="card-text mb-0">Expires: @card.ExpirationMonth/@card.ExpirationYear</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (!person.Addresses.Any() && !person.CreditCards.Any())
+                        {
+                            <hr>
+                            <div class="text-center py-4">
+                                <i class="oi oi-info display-4 text-muted"></i>
+                                <h5 class="text-muted mt-2">No Additional Information</h5>
+                                <p class="text-muted">This person has no addresses or credit cards on file.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    
+    private PersonDto person = new();
+    private bool loading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPerson();
+    }
+
+    private async Task LoadPerson()
+    {
+        try
+        {
+            loading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            var result = await ApiService.GetPersonAsync(Id);
+            if (result == null)
+            {
+                errorMessage = "Person not found.";
+            }
+            else
+            {
+                person = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load person: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void EditPerson()
+    {
+        Navigation.NavigateTo($"/persons/edit/{Id}");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/persons");
+    }
+
+    private static int CalculateAge(DateTime birthDate)
+    {
+        var today = DateTime.Today;
+        var age = today.Year - birthDate.Year;
+        if (birthDate.Date > today.AddYears(-age)) age--;
+        return age;
+    }
+}

@@ -339,17 +339,13 @@
 
     private void OnBirthDateChanged(ChangeEventArgs e)
     {
-        if (e.Value is DateOnly date)
+        if (e.Value is DateTime dateTime)
         {
-            person.BirthDate = date;
-        }
-        else if (e.Value is DateTime dateTime)
-        {
-            person.BirthDate = DateOnly.FromDateTime(dateTime);
+            person.BirthDate = dateTime;
         }
         else
         {
-            person.BirthDate = null;
+            person.BirthDate = DateTime.MinValue;
         }
         UpdateValidationErrors();
         StateHasChanged();
@@ -448,7 +444,7 @@
         if (string.IsNullOrWhiteSpace(person.LastName))
             validationErrors.Add("Last Name is required");
         
-        if (person.BirthDate == null)
+        if (person.BirthDate == DateTime.MinValue)
             validationErrors.Add("Birth Date is required");
         
         if (string.IsNullOrWhiteSpace(ssnValue))
@@ -529,7 +525,7 @@
                           person.FirstName.Length > 50 ? "First Name cannot exceed 50 characters" : string.Empty,
             "LastName" => string.IsNullOrWhiteSpace(person.LastName) ? "Last Name is required" : 
                          person.LastName.Length > 50 ? "Last Name cannot exceed 50 characters" : string.Empty,
-            "BirthDate" => person.BirthDate == null ? "Birth Date is required" : string.Empty,
+            "BirthDate" => person.BirthDate == DateTime.MinValue ? "Birth Date is required" : string.Empty,
             _ => string.Empty
         };
     }

@@ -20,13 +20,13 @@ public class RateLimitController : ControllerBase
     public async Task<IActionResult> GetRateLimitStatus()
     {
         var clientId = GetClientId();
-        var remaining = await _rateLimitService.GetRemainingRequestsAsync(clientId, maxRequests: 10, TimeSpan.FromDays(1));
+        var remaining = await _rateLimitService.GetRemainingRequestsAsync(clientId, maxRequests: 1000, TimeSpan.FromDays(1));
         
         return Ok(new
         {
             clientId = clientId,
             remainingRequests = remaining,
-            maxRequests = 10,
+            maxRequests = 1000,
             timeWindow = "24 hours",
             resetTime = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ssZ")
         });

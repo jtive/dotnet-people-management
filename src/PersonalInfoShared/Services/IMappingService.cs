@@ -10,6 +10,7 @@ public interface IMappingService
     void UpdatePerson(Person person, UpdatePersonDto dto);
     
     AddressDto MapToAddressDto(Address address);
+    UnmaskedAddressDto MapToUnmaskedAddressDto(Address address);
     Address MapToAddress(CreateAddressDto dto);
     void UpdateAddress(Address address, UpdateAddressDto dto);
     

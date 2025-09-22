@@ -22,11 +22,11 @@ public class RateLimitMiddleware
         if (IsWriteOperation(context.Request.Method))
         {
             var clientId = GetClientId(context);
-            var isAllowed = await _rateLimitService.IsAllowedAsync(clientId, maxRequests: 10, TimeSpan.FromDays(1));
+            var isAllowed = await _rateLimitService.IsAllowedAsync(clientId, maxRequests: 1000, TimeSpan.FromDays(1));
 
             if (!isAllowed)
             {
-                var remaining = await _rateLimitService.GetRemainingRequestsAsync(clientId, maxRequests: 10, TimeSpan.FromDays(1));
+                var remaining = await _rateLimitService.GetRemainingRequestsAsync(clientId, maxRequests: 1000, TimeSpan.FromDays(1));
                 
                 _logger.LogWarning("Rate limit exceeded for client {ClientId}. Remaining requests: {Remaining}", clientId, remaining);
                 
@@ -36,7 +36,7 @@ public class RateLimitMiddleware
                 var response = new
                 {
                     error = "Rate limit exceeded",
-                    message = "You have exceeded the maximum number of write operations (10 per day). Please try again tomorrow.",
+                    message = "You have exceeded the maximum number of write operations (1000 per day). Please try again tomorrow.",
                     remainingRequests = remaining,
                     resetTime = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-ddTHH:mm:ssZ")
                 };

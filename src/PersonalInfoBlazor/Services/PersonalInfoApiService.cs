@@ -87,6 +87,16 @@ public class PersonalInfoApiService : IPersonalInfoApiService
         return JsonSerializer.Deserialize<AddressDto>(json, _jsonOptions);
     }
 
+    public async Task<UnmaskedAddressDto?> GetUnmaskedAddressAsync(Guid id)
+    {
+        var response = await _httpClient.GetAsync($"/api/address/{id}/unmasked");
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return null;
+        response.EnsureSuccessStatusCode();
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<UnmaskedAddressDto>(json, _jsonOptions);
+    }
+
     public async Task<AddressDto> CreateAddressAsync(Guid personId, CreateAddressDto address)
     {
         var json = JsonSerializer.Serialize(address, _jsonOptions);

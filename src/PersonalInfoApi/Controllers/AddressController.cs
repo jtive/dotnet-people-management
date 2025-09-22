@@ -44,6 +44,19 @@ public class AddressController : ControllerBase
         return Ok(addressDto);
     }
 
+    [HttpGet("{id}/unmasked")]
+    public async Task<ActionResult<UnmaskedAddressDto>> GetUnmaskedAddress(Guid id)
+    {
+        var address = await _context.Addresses.FindAsync(id);
+        if (address == null)
+        {
+            return NotFound();
+        }
+
+        var addressDto = _mappingService.MapToUnmaskedAddressDto(address);
+        return Ok(addressDto);
+    }
+
     [HttpPost("person/{personId}")]
     public async Task<ActionResult<AddressDto>> CreateAddress(Guid personId, CreateAddressDto createAddressDto)
     {

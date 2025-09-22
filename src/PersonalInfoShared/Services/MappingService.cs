@@ -20,7 +20,7 @@ public class MappingService : IMappingService
             Id = person.Id,
             FirstName = person.FirstName,
             LastName = person.LastName,
-            BirthDate = _maskingService.MaskBirthDate(person.BirthDate),
+            BirthDate = person.BirthDate,
             SSN = _maskingService.MaskSSN(person.SSN),
             CreatedAt = person.CreatedAt,
             UpdatedAt = person.UpdatedAt,
@@ -35,7 +35,7 @@ public class MappingService : IMappingService
         {
             FirstName = dto.FirstName,
             LastName = dto.LastName,
-            BirthDate = dto.BirthDate,
+            BirthDate = DateTime.SpecifyKind(dto.BirthDate, DateTimeKind.Utc),
             SSN = _maskingService.FormatSSN(dto.SSN), // Format for database compatibility
             Addresses = dto.Addresses.Select(MapToAddress).ToList(),
             CreditCards = dto.CreditCards.Select(MapToCreditCard).ToList()
@@ -46,8 +46,8 @@ public class MappingService : IMappingService
     {
         person.FirstName = dto.FirstName;
         person.LastName = dto.LastName;
-        person.BirthDate = dto.BirthDate;
-        person.SSN = _maskingService.FormatSSN(dto.SSN); // Format for database compatibility
+        person.BirthDate = DateTime.SpecifyKind(dto.BirthDate, DateTimeKind.Utc);
+        // SSN is not editable, so we don't update it
         person.UpdatedAt = DateTime.UtcNow;
     }
 
@@ -63,6 +63,24 @@ public class MappingService : IMappingService
             State = _maskingService.MaskAddress(address.State),
             ZipCode = _maskingService.MaskAddress(address.ZipCode),
             Country = _maskingService.MaskAddress(address.Country),
+            IsPrimary = address.IsPrimary,
+            CreatedAt = address.CreatedAt,
+            UpdatedAt = address.UpdatedAt
+        };
+    }
+
+    public UnmaskedAddressDto MapToUnmaskedAddressDto(Address address)
+    {
+        return new UnmaskedAddressDto
+        {
+            Id = address.Id,
+            PersonId = address.PersonId,
+            AddressType = address.AddressType,
+            StreetAddress = address.StreetAddress,
+            City = address.City,
+            State = address.State,
+            ZipCode = address.ZipCode,
+            Country = address.Country,
             IsPrimary = address.IsPrimary,
             CreatedAt = address.CreatedAt,
             UpdatedAt = address.UpdatedAt

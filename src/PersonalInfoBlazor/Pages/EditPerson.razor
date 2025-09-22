@@ -1,0 +1,761 @@
+@page "/persons/edit/{Id:guid}"
+@using PersonalInfoBlazor.Services
+@using PersonalInfoBlazor.Components
+@using PersonalInfoShared.DTOs
+@inject IPersonalInfoApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Edit Person - Personal Info System</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            @if (loading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading person details...</p>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Error</h4>
+                    <p>@errorMessage</p>
+                    <hr>
+                    <button class="btn btn-outline-danger" @onclick="GoBack">Go Back</button>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Edit Person</h3>
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="editPerson" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="firstName" class="form-label">First Name *</label>
+                                        <InputText id="firstName" class="form-control" @bind-Value="editPerson.FirstName" />
+                                        <ValidationMessage For="@(() => editPerson.FirstName)" class="text-danger" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lastName" class="form-label">Last Name *</label>
+                                        <InputText id="lastName" class="form-control" @bind-Value="editPerson.LastName" />
+                                        <ValidationMessage For="@(() => editPerson.LastName)" class="text-danger" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birthDate" class="form-label">Birth Date *</label>
+                                <InputDate id="birthDate" class="form-control" @bind-Value="editPerson.BirthDate" />
+                                <ValidationMessage For="@(() => editPerson.BirthDate)" class="text-danger" />
+                            </div>
+
+                            <!-- Address Section -->
+                            <hr class="my-4">
+                            <h5 class="mb-3">Addresses</h5>
+                            @if (person.Addresses.Any())
+                            {
+                                <div class="row mb-3">
+                                    @foreach (var address in person.Addresses)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border">
+                                                @if (editingAddressId == address.Id)
+                                                {
+                                                    <!-- Edit Mode -->
+                                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                                        <h6 class="mb-0">Edit @address.AddressType</h6>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button type="button" class="btn btn-outline-success btn-sm" @onclick="() => SaveAddress(address.Id)">
+                                                                <i class="oi oi-check"></i> Save
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CancelEditAddress">
+                                                                <i class="oi oi-x"></i> Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Address Type</label>
+                                                                <InputText class="form-control" @bind-Value="editingAddress.AddressType" />
+                                                                @if (string.IsNullOrWhiteSpace(editingAddress.AddressType))
+                                                                {
+                                                                    <div class="text-danger">Address Type is required</div>
+                                                                }
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Street Address</label>
+                                                                <InputText class="form-control" @bind-Value="editingAddress.StreetAddress" />
+                                                                @if (string.IsNullOrWhiteSpace(editingAddress.StreetAddress))
+                                                                {
+                                                                    <div class="text-danger">Street Address is required</div>
+                                                                }
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-6">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">City</label>
+                                                                        <InputText class="form-control" @bind-Value="editingAddress.City" />
+                                                                        @if (string.IsNullOrWhiteSpace(editingAddress.City))
+                                                                        {
+                                                                            <div class="text-danger">City is required</div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">State</label>
+                                                                        <InputText class="form-control" @bind-Value="editingAddress.State" />
+                                                                        @if (string.IsNullOrWhiteSpace(editingAddress.State))
+                                                                        {
+                                                                            <div class="text-danger">State is required</div>
+                                                                        }
+                                                                        else if (editingAddress.State.Length != 2)
+                                                                        {
+                                                                            <div class="text-danger">State must be exactly 2 characters</div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Zip</label>
+                                                                        <InputText class="form-control" @bind-Value="editingAddress.ZipCode" />
+                                                                        @if (string.IsNullOrWhiteSpace(editingAddress.ZipCode))
+                                                                        {
+                                                                            <div class="text-danger">Zip Code is required</div>
+                                                                        }
+                                                                        else if (!System.Text.RegularExpressions.Regex.IsMatch(editingAddress.ZipCode, @"^\d{5}(-\d{4})?$"))
+                                                                        {
+                                                                            <div class="text-danger">Zip Code must be in format 12345 or 12345-6789</div>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Country</label>
+                                                                <InputText class="form-control" @bind-Value="editingAddress.Country" />
+                                                                @if (string.IsNullOrWhiteSpace(editingAddress.Country))
+                                                                {
+                                                                    <div class="text-danger">Country is required</div>
+                                                                }
+                                                                else if (editingAddress.Country.Length != 2)
+                                                                {
+                                                                    <div class="text-danger">Country must be exactly 2 characters</div>
+                                                                }
+                                                            </div>
+                            <div class="mb-3">
+                                                                <div class="form-check">
+                                                                    <InputCheckbox class="form-check-input" @bind-Value="editingAddress.IsPrimary" />
+                                                                    <label class="form-check-label">Primary Address</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <!-- View Mode -->
+                                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                                        <h6 class="mb-0">@address.AddressType</h6>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm" @onclick="() => EditAddress(address.Id)">
+                                                                <i class="oi oi-pencil"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => DeleteAddress(address.Id)">
+                                                                <i class="oi oi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <p class="card-text mb-1">@address.StreetAddress</p>
+                                                        <p class="card-text mb-1">@address.City, @address.State @address.ZipCode</p>
+                                                        <p class="card-text mb-0">@address.Country</p>
+                                                        @if (address.IsPrimary)
+                                                        {
+                                                            <span class="badge bg-primary mt-2">Primary</span>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="oi oi-info"></i> No addresses on file.
+                            </div>
+                            }
+
+                            <!-- Credit Card Section -->
+                            <hr class="my-4">
+                            <h5 class="mb-3">Credit Cards</h5>
+                            @if (person.CreditCards.Any())
+                            {
+                                <div class="row mb-3">
+                                    @foreach (var card in person.CreditCards)
+                                    {
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card border">
+                                                <div class="card-header d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">@card.CardType</h6>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Credit card editing not available yet">
+                                                            <i class="oi oi-pencil"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm" @onclick="() => DeleteCreditCard(card.Id)">
+                                                            <i class="oi oi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text mb-1">**** **** **** @card.LastFourDigits</p>
+                                                    <p class="card-text mb-0">Expires: @card.ExpirationMonth/@card.ExpirationYear</p>
+                                                    @if (card.IsActive)
+                                                    {
+                                                        <span class="badge bg-success mt-2">Active</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary mt-2">Inactive</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="oi oi-info"></i> No credit cards on file.
+                                </div>
+                            }
+                            @if (addingCreditCard)
+                            {
+                                <div class="card border-success mb-4">
+                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">Add New Credit Card</h6>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-light btn-sm" @onclick="SaveCreditCard">
+                                                <i class="oi oi-check"></i> Save
+                                            </button>
+                                            <button type="button" class="btn btn-light btn-sm" @onclick="CancelAddCreditCard">
+                                                <i class="oi oi-x"></i> Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Card Type</label>
+                                                    <InputSelect class="form-control" @bind-Value="newCreditCard.CardType">
+                                                        <option value="">Select Card Type</option>
+                                                        <option value="Visa">Visa</option>
+                                                        <option value="MasterCard">MasterCard</option>
+                                                        <option value="American Express">American Express</option>
+                                                        <option value="Discover">Discover</option>
+                                                        <option value="JCB">JCB</option>
+                                                        <option value="Diners Club">Diners Club</option>
+                                                        <option value="Other">Other</option>
+                                                    </InputSelect>
+                                                    @if (string.IsNullOrWhiteSpace(newCreditCard.CardType))
+                                                    {
+                                                        <div class="text-danger">Card Type is required</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Card Number</label>
+                                                    <MaskedInput CssClass="form-control" 
+                                                               @bind-Value="cardNumberValue"
+                                                               Type="MaskedInput.InputType.CreditCard"
+                                                               Placeholder="1234-5678-9012-3456" />
+                                                    @if (string.IsNullOrWhiteSpace(cardNumberValue))
+                                                    {
+                                                        <div class="text-danger">Card Number is required</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Expiration Month</label>
+                                                    <InputNumber class="form-control" @bind-Value="newCreditCard.ExpirationMonth" min="1" max="12" />
+                                                    @if (newCreditCard.ExpirationMonth <= 0)
+                                                    {
+                                                        <div class="text-danger">Expiration Month is required</div>
+                                                    }
+                                                    else if (newCreditCard.ExpirationMonth < 1 || newCreditCard.ExpirationMonth > 12)
+                                                    {
+                                                        <div class="text-danger">Expiration Month must be between 1 and 12</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Expiration Year</label>
+                                                    <InputNumber class="form-control" @bind-Value="newCreditCard.ExpirationYear" min="2024" max="2030" />
+                                                    @if (newCreditCard.ExpirationYear <= 0)
+                                                    {
+                                                        <div class="text-danger">Expiration Year is required</div>
+                                                    }
+                                                    else if (newCreditCard.ExpirationYear < 2024 || newCreditCard.ExpirationYear > 2030)
+                                                    {
+                                                        <div class="text-danger">Expiration Year must be between 2024 and 2030</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <InputCheckbox class="form-check-input" @bind-Value="newCreditCard.IsActive" />
+                                                <label class="form-check-label">Active Card</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-outline-success mb-4" @onclick="StartAddCreditCard">
+                                    <i class="oi oi-plus"></i> Add Credit Card
+                                </button>
+                            }
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Saving...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Save Changes</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    
+    private PersonDto person = new();
+    private UpdatePersonDto editPerson = new();
+    private bool loading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private Guid? editingAddressId = null;
+    private UpdateAddressDto editingAddress = new();
+    private bool addingCreditCard = false;
+    private CreateCreditCardDto newCreditCard = new();
+    private string cardNumberValue = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPerson();
+    }
+
+    private async Task LoadPerson()
+    {
+        try
+        {
+            loading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            var result = await ApiService.GetPersonAsync(Id);
+            if (result == null)
+            {
+                errorMessage = "Person not found.";
+            }
+            else
+            {
+                person = result;
+                // Initialize the edit form with the current person data
+                editPerson = new UpdatePersonDto
+                {
+                    FirstName = person.FirstName,
+                    LastName = person.LastName,
+                    BirthDate = person.BirthDate
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load person: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (isSubmitting) return;
+
+        try
+        {
+            isSubmitting = true;
+            StateHasChanged();
+
+            // Check for unsaved address changes and save them
+            if (editingAddressId.HasValue && HasAddressChanges())
+            {
+                await SaveAddressChanges();
+            }
+
+            // Check for unsaved credit card changes and save them
+            if (addingCreditCard && HasCreditCardChanges())
+            {
+                await SaveCreditCardChanges();
+            }
+
+            // Save the main person information
+            await ApiService.UpdatePersonAsync(Id, editPerson);
+
+            await JSRuntime.InvokeVoidAsync("alert", "Person updated successfully!");
+            Navigation.NavigateTo("/persons");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to update person: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/persons");
+    }
+
+    // Address management methods
+
+    private async Task EditAddress(Guid addressId)
+    {
+        try
+        {
+            // Fetch the actual unmasked address data from the API
+            var address = await ApiService.GetUnmaskedAddressAsync(addressId);
+            if (address != null)
+            {
+                editingAddressId = addressId;
+                editingAddress = new UpdateAddressDto
+                {
+                    AddressType = address.AddressType,
+                    StreetAddress = address.StreetAddress,
+                    City = address.City,
+                    State = address.State,
+                    ZipCode = address.ZipCode,
+                    Country = address.Country,
+                    IsPrimary = address.IsPrimary
+                };
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to load address for editing: {ex.Message}");
+        }
+    }
+
+    private async Task SaveAddress(Guid addressId)
+    {
+        // Validate the address before saving
+        if (string.IsNullOrWhiteSpace(editingAddress.AddressType) ||
+            string.IsNullOrWhiteSpace(editingAddress.StreetAddress) ||
+            string.IsNullOrWhiteSpace(editingAddress.City) ||
+            string.IsNullOrWhiteSpace(editingAddress.State) ||
+            string.IsNullOrWhiteSpace(editingAddress.ZipCode) ||
+            string.IsNullOrWhiteSpace(editingAddress.Country))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Please fill in all required fields.");
+            StateHasChanged();
+            return;
+        }
+
+        if (editingAddress.State.Length != 2)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "State must be exactly 2 characters.");
+            StateHasChanged();
+            return;
+        }
+
+        if (editingAddress.Country.Length != 2)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Country must be exactly 2 characters.");
+            StateHasChanged();
+            return;
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(editingAddress.ZipCode, @"^\d{5}(-\d{4})?$"))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Zip Code must be in format 12345 or 12345-6789.");
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            // Save the address
+            await ApiService.UpdateAddressAsync(addressId, editingAddress);
+            
+            // Also save the main person form changes
+            await ApiService.UpdatePersonAsync(Id, editPerson);
+            
+            await LoadPerson(); // Refresh the data
+            CancelEditAddress();
+            await JSRuntime.InvokeVoidAsync("alert", "Address and person information updated successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to update: {ex.Message}");
+        }
+    }
+
+    private void CancelEditAddress()
+    {
+        editingAddressId = null;
+        editingAddress = new UpdateAddressDto();
+        StateHasChanged();
+    }
+
+    private async Task DeleteAddress(Guid addressId)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this address?");
+        if (confirmed)
+        {
+            try
+            {
+                await ApiService.DeleteAddressAsync(addressId);
+                await LoadPerson(); // Refresh the data
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Failed to delete address: {ex.Message}");
+            }
+        }
+    }
+
+    // Credit card management methods
+    private void StartAddCreditCard()
+    {
+        addingCreditCard = true;
+        newCreditCard = new CreateCreditCardDto { IsActive = true };
+        cardNumberValue = string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task SaveCreditCard()
+    {
+        // Validate the credit card before saving
+        if (string.IsNullOrWhiteSpace(newCreditCard.CardType) ||
+            string.IsNullOrWhiteSpace(cardNumberValue) ||
+            newCreditCard.ExpirationMonth <= 0 ||
+            newCreditCard.ExpirationYear <= 0)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Please fill in all required fields.");
+            StateHasChanged();
+            return;
+        }
+
+        if (newCreditCard.ExpirationMonth < 1 || newCreditCard.ExpirationMonth > 12)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Expiration Month must be between 1 and 12.");
+            StateHasChanged();
+            return;
+        }
+
+        if (newCreditCard.ExpirationYear < 2024 || newCreditCard.ExpirationYear > 2030)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Expiration Year must be between 2024 and 2030.");
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            // Set the card number from the masked input
+            newCreditCard.CardNumber = cardNumberValue;
+            
+            // Add the credit card
+            await ApiService.CreateCreditCardAsync(Id, newCreditCard);
+            
+            // Also save the main person form changes
+            await ApiService.UpdatePersonAsync(Id, editPerson);
+            
+            await LoadPerson(); // Refresh the data
+            CancelAddCreditCard();
+            await JSRuntime.InvokeVoidAsync("alert", "Credit card added and person information updated successfully!");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Failed to update: {ex.Message}");
+        }
+    }
+
+    private void CancelAddCreditCard()
+    {
+        addingCreditCard = false;
+        newCreditCard = new CreateCreditCardDto();
+        cardNumberValue = string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task DeleteCreditCard(Guid creditCardId)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this credit card?");
+        if (confirmed)
+        {
+            try
+            {
+                await ApiService.DeleteCreditCardAsync(creditCardId);
+                await LoadPerson(); // Refresh the data
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Failed to delete credit card: {ex.Message}");
+            }
+        }
+    }
+
+    // Helper methods for handling unsaved changes
+    private bool HasAddressChanges()
+    {
+        if (!editingAddressId.HasValue) return false;
+        
+        // Check if any field has been modified (not empty)
+        return !string.IsNullOrWhiteSpace(editingAddress.AddressType) ||
+               !string.IsNullOrWhiteSpace(editingAddress.StreetAddress) ||
+               !string.IsNullOrWhiteSpace(editingAddress.City) ||
+               !string.IsNullOrWhiteSpace(editingAddress.State) ||
+               !string.IsNullOrWhiteSpace(editingAddress.ZipCode) ||
+               !string.IsNullOrWhiteSpace(editingAddress.Country);
+    }
+
+    private bool HasCreditCardChanges()
+    {
+        if (!addingCreditCard) return false;
+        
+        // Check if any field has been modified (not empty)
+        return !string.IsNullOrWhiteSpace(newCreditCard.CardType) ||
+               !string.IsNullOrWhiteSpace(cardNumberValue) ||
+               newCreditCard.ExpirationMonth > 0 ||
+               newCreditCard.ExpirationYear > 0;
+    }
+
+    private async Task SaveAddressChanges()
+    {
+        // Validate the address before saving
+        if (string.IsNullOrWhiteSpace(editingAddress.AddressType) ||
+            string.IsNullOrWhiteSpace(editingAddress.StreetAddress) ||
+            string.IsNullOrWhiteSpace(editingAddress.City) ||
+            string.IsNullOrWhiteSpace(editingAddress.State) ||
+            string.IsNullOrWhiteSpace(editingAddress.ZipCode) ||
+            string.IsNullOrWhiteSpace(editingAddress.Country))
+        {
+            // Skip saving if required fields are missing
+            return;
+        }
+
+        if (editingAddress.State.Length != 2 || editingAddress.Country.Length != 2)
+        {
+            // Skip saving if validation fails
+            return;
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(editingAddress.ZipCode, @"^\d{5}(-\d{4})?$"))
+        {
+            // Skip saving if validation fails
+            return;
+        }
+
+        try
+        {
+            // Save the address
+            await ApiService.UpdateAddressAsync(editingAddressId.Value, editingAddress);
+            
+            // Refresh the data and clear editing state
+            await LoadPerson();
+            CancelEditAddress();
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't show alert since this is automatic saving
+            Console.WriteLine($"Failed to auto-save address: {ex.Message}");
+        }
+    }
+
+    private async Task SaveCreditCardChanges()
+    {
+        // Validate the credit card before saving
+        if (string.IsNullOrWhiteSpace(newCreditCard.CardType) ||
+            string.IsNullOrWhiteSpace(cardNumberValue) ||
+            newCreditCard.ExpirationMonth <= 0 ||
+            newCreditCard.ExpirationYear <= 0)
+        {
+            // Skip saving if required fields are missing
+            return;
+        }
+
+        if (newCreditCard.ExpirationMonth < 1 || newCreditCard.ExpirationMonth > 12 ||
+            newCreditCard.ExpirationYear < 2024 || newCreditCard.ExpirationYear > 2030)
+        {
+            // Skip saving if validation fails
+            return;
+        }
+
+        try
+        {
+            // Set the card number from the masked input
+            newCreditCard.CardNumber = cardNumberValue;
+            
+            // Add the credit card
+            await ApiService.CreateCreditCardAsync(Id, newCreditCard);
+            
+            // Refresh the data and clear adding state
+            await LoadPerson();
+            CancelAddCreditCard();
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't show alert since this is automatic saving
+            Console.WriteLine($"Failed to auto-save credit card: {ex.Message}");
+        }
+    }
+}

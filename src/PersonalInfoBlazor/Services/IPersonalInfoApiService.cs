@@ -13,6 +13,7 @@ public interface IPersonalInfoApiService
     // Address operations
     Task<IEnumerable<AddressDto>> GetAddressesByPersonAsync(Guid personId);
     Task<AddressDto?> GetAddressAsync(Guid id);
+    Task<UnmaskedAddressDto?> GetUnmaskedAddressAsync(Guid id);
     Task<AddressDto> CreateAddressAsync(Guid personId, CreateAddressDto address);
     Task UpdateAddressAsync(Guid id, UpdateAddressDto address);
     Task DeleteAddressAsync(Guid id);

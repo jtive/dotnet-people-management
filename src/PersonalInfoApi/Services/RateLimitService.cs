@@ -7,7 +7,7 @@ public class RateLimitService : IRateLimitService
     private readonly ConcurrentDictionary<string, List<DateTime>> _requestHistory = new();
     private readonly TimeSpan _defaultTimeWindow = TimeSpan.FromDays(1);
 
-    public async Task<bool> IsAllowedAsync(string clientId, int maxRequests = 10, TimeSpan? timeWindow = null)
+    public Task<bool> IsAllowedAsync(string clientId, int maxRequests = 1000, TimeSpan? timeWindow = null)
     {
         var window = timeWindow ?? _defaultTimeWindow;
         var now = DateTime.UtcNow;
@@ -22,15 +22,15 @@ public class RateLimitService : IRateLimitService
         // Check if we're under the limit
         if (requests.Count >= maxRequests)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         // Add current request
         requests.Add(now);
-        return true;
+        return Task.FromResult(true);
     }
 
-    public async Task<int> GetRemainingRequestsAsync(string clientId, int maxRequests = 10, TimeSpan? timeWindow = null)
+    public Task<int> GetRemainingRequestsAsync(string clientId, int maxRequests = 1000, TimeSpan? timeWindow = null)
     {
         var window = timeWindow ?? _defaultTimeWindow;
         var now = DateTime.UtcNow;
@@ -39,7 +39,7 @@ public class RateLimitService : IRateLimitService
         // Get request history for this client
         if (!_requestHistory.TryGetValue(clientId, out var requests))
         {
-            return maxRequests;
+            return Task.FromResult(maxRequests);
         }
 
         // Remove old requests outside the time window
@@ -47,6 +47,6 @@ public class RateLimitService : IRateLimitService
 
         // Calculate remaining requests
         var remaining = maxRequests - requests.Count;
-        return Math.Max(0, remaining);
+        return Task.FromResult(Math.Max(0, remaining));
     }
 }

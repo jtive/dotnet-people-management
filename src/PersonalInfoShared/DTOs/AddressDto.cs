@@ -56,3 +56,18 @@ public class UpdateAddressDto
     public string Country { get; set; } = string.Empty;
     public bool IsPrimary { get; set; }
 }
+
+public class UnmaskedAddressDto
+{
+    public Guid Id { get; set; }
+    public Guid PersonId { get; set; }
+    public string AddressType { get; set; } = string.Empty;
+    public string StreetAddress { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string State { get; set; } = string.Empty;
+    public string ZipCode { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
+    public bool IsPrimary { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}

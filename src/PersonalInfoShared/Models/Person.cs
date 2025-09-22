@@ -15,7 +15,7 @@ public class Person
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
     
-    public DateOnly? BirthDate { get; set; }
+    public DateTime BirthDate { get; set; }
     
     [MaxLength(11)]
     public string? SSN { get; set; } // Will be encrypted
