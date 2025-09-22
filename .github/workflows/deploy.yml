@@ -104,10 +104,7 @@ jobs:
                       "ASPNETCORE_URLS": "http://+:8080"
                     }
                   },
-                  "ImageRepositoryType": "ECR",
-                  "ImageRepositoryCredentials": {
-                    "CredentialsProvider": "ECR"
-                  }
+                  "ImageRepositoryType": "ECR"
                 },
                 "AutoDeploymentsEnabled": true
               }' \
