@@ -34,6 +34,28 @@ jobs:
         run: |
           aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region $AWS_REGION || \
           aws ecr create-repository --repository-name $ECR_REPOSITORY --region $AWS_REGION
+          
+          # Set repository policy to allow App Runner access
+          aws ecr set-repository-policy \
+            --repository-name $ECR_REPOSITORY \
+            --region $AWS_REGION \
+            --policy-text '{
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "AppRunnerAccess",
+                  "Effect": "Allow",
+                  "Principal": {
+                    "AWS": "arn:aws:iam::486151888818:role/AppRunnerECRAccessRole"
+                  },
+                  "Action": [
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage",
+                    "ecr:BatchCheckLayerAvailability"
+                  ]
+                }
+              ]
+            }' || echo "Repository policy already set"
       
       - name: Build and push Docker image
         env:
@@ -69,15 +91,19 @@ jobs:
             --role-name AppRunnerECRAccessRole \
             --assume-role-policy-document file://trust-policy.json || echo "Role already exists"
           
-          # Attach the App Runner ECR access policy
+          # Attach the custom ECR access policy
           aws iam attach-role-policy \
             --role-name AppRunnerECRAccessRole \
-            --policy-arn arn:aws:iam::aws:policy/service-role/AppRunnerServicePolicyForECRAccess || echo "Policy already attached"
+            --policy-arn arn:aws:iam::486151888818:policy/AppRunnerECRPolicy || echo "Policy already attached"
           
           # Get the role ARN
           ROLE_ARN=$(aws iam get-role --role-name AppRunnerECRAccessRole --query 'Role.Arn' --output text)
           echo "App Runner role ARN: $ROLE_ARN"
           echo "ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+          
+          # Wait for IAM role to propagate (can take up to 60 seconds)
+          echo "Waiting for IAM role to propagate..."
+          sleep 30
       
       - name: Create or update App Runner service
         env:
