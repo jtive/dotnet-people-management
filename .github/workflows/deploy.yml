@@ -47,12 +47,15 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       
       - name: Create or update App Runner service
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           # Check if service exists
           SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='$APP_RUNNER_SERVICE'].ServiceArn" --output text)
           
           if [ -z "$SERVICE_ARN" ]; then
             echo "Service doesn't exist, creating new App Runner service..."
+            echo "Using ECR registry: $ECR_REGISTRY"
             
             # Create the service using the configuration file
             SERVICE_ARN=$(aws apprunner create-service \
