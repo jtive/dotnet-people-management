@@ -21,10 +21,6 @@ D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\Microsoft.Extensions.
 D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\Npgsql.dll
 D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
-D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\System.IO.Pipelines.dll
-D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\System.Text.Encodings.Web.dll
-D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\System.Text.Json.dll
-D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\PersonalInfoShared.dll
 D:\dev\play-ground\src\PersonalInfoBlazor\bin\Debug\net8.0\PersonalInfoShared.pdb
 D:\dev\play-ground\src\PersonalInfoBlazor\obj\Debug\net8.0\PersonalInfoBlazor.csproj.AssemblyReference.cache
@@ -52,3 +48,4 @@ D:\dev\play-ground\src\PersonalInfoBlazor\obj\Debug\net8.0\refint\PersonalInfoBl
 D:\dev\play-ground\src\PersonalInfoBlazor\obj\Debug\net8.0\PersonalInfoBlazor.pdb
 D:\dev\play-ground\src\PersonalInfoBlazor\obj\Debug\net8.0\PersonalInfoBlazor.genruntimeconfig.cache
 D:\dev\play-ground\src\PersonalInfoBlazor\obj\Debug\net8.0\ref\PersonalInfoBlazor.dll
+D:\Dev\play-ground\src\PersonalInfoBlazor\obj\Debug\net8.0\PersonalInfoBlazor.sourcelink.json

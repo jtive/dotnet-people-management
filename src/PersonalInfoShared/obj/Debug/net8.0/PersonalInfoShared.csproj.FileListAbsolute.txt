@@ -12,3 +12,4 @@ D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\refint\PersonalInfoSh
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.pdb
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.genruntimeconfig.cache
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\ref\PersonalInfoShared.dll
+D:\Dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.sourcelink.json

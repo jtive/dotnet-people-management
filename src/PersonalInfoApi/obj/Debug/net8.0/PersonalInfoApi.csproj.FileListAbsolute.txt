@@ -135,3 +135,4 @@ D:\Dev\play-ground\src\PersonalInfoApi\obj\Debug\net8.0\refint\PersonalInfoApi.d
 D:\Dev\play-ground\src\PersonalInfoApi\obj\Debug\net8.0\PersonalInfoApi.pdb
 D:\Dev\play-ground\src\PersonalInfoApi\obj\Debug\net8.0\PersonalInfoApi.genruntimeconfig.cache
 D:\Dev\play-ground\src\PersonalInfoApi\obj\Debug\net8.0\ref\PersonalInfoApi.dll
+D:\Dev\play-ground\src\PersonalInfoApi\obj\Debug\net8.0\PersonalInfoApi.sourcelink.json

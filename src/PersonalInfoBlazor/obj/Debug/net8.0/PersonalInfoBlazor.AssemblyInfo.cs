@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PersonalInfoBlazor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a00a36d0e1dfd7ac0e9a9abcccd837c94b99c209")]
 [assembly: System.Reflection.AssemblyProductAttribute("PersonalInfoBlazor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PersonalInfoBlazor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

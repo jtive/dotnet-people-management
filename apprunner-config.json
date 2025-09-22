@@ -1,0 +1,33 @@
+{
+  "ServiceName": "personal-info-system",
+  "SourceConfiguration": {
+    "ImageRepository": {
+      "ImageIdentifier": "public.ecr.aws/aws-containers/hello-app-runner:latest",
+      "ImageConfiguration": {
+        "Port": "8080",
+        "RuntimeEnvironmentVariables": {
+          "ASPNETCORE_ENVIRONMENT": "Production",
+          "ASPNETCORE_URLS": "http://+:8080"
+        },
+        "StartCommand": "dotnet PersonalInfoApi.dll"
+      },
+      "ImageRepositoryType": "ECR_PUBLIC"
+    },
+    "AutoDeploymentsEnabled": true
+  },
+  "InstanceConfiguration": {
+    "Cpu": "0.25 vCPU",
+    "Memory": "0.5 GB",
+    "InstanceRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/AppRunnerInstanceRole"
+  },
+  "Tags": [
+    {
+      "Key": "Environment",
+      "Value": "POC"
+    },
+    {
+      "Key": "Project",
+      "Value": "PersonalInfoSystem"
+    }
+  ]
+}
