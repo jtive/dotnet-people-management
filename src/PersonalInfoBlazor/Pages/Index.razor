@@ -1,0 +1,204 @@
+﻿@page "/"
+@using PersonalInfoBlazor.Services
+@using PersonalInfoShared.DTOs
+@inject IPersonalInfoApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - Personal Info System</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Personal Information Management Dashboard</h1>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">@personsCount</h4>
+                                    <p class="card-text">Total Persons</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="oi oi-person display-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/persons" class="btn btn-light btn-sm">View All</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">@addressesCount</h4>
+                                    <p class="card-text">Total Addresses</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="oi oi-location display-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="card-title">@creditCardsCount</h4>
+                                    <p class="card-text">Credit Cards</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="oi oi-credit-card display-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" @onclick="@(() => Navigation.NavigateTo("/persons/add"))">
+                                    <i class="oi oi-plus"></i> Add New Person
+                                </button>
+                                <button class="btn btn-info" @onclick="@(() => Navigation.NavigateTo("/persons"))">
+                                    <i class="oi oi-list"></i> Manage Persons
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">System Status</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (systemHealthy)
+                            {
+                                <div class="alert alert-success" role="alert">
+                                    <i class="oi oi-check"></i> System is healthy and running
+                                </div>
+                            }
+                            else if (healthCheckFailed)
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    <i class="oi oi-warning"></i> System health check failed
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Checking system health...</span>
+                                    </div>
+                                    <p class="mt-2">Checking system health...</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (recentPersons.Any())
+            {
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recent Persons</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    @foreach (var person in recentPersons.Take(6))
+                                    {
+                                        <div class="col-md-4 mb-3">
+                                            <div class="border rounded p-3">
+                                                <h6>@person.FirstName @person.LastName</h6>
+                                                <p class="text-muted mb-1">
+                                                    <i class="oi oi-calendar"></i> 
+                                                    Created: @person.CreatedAt.ToString("MM/dd/yyyy")
+                                                </p>
+                                                <span class="badge bg-primary">Person</span>
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Individual</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a href="/persons" class="btn btn-outline-primary">View All Persons</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private int personsCount = 0;
+    private int addressesCount = 0;
+    private int creditCardsCount = 0;
+    private List<PersonDto> recentPersons = new();
+    
+    private bool systemHealthy = false;
+    private bool healthCheckFailed = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            // Load statistics
+            var persons = await ApiService.GetPersonsAsync();
+            personsCount = persons.Count();
+            addressesCount = persons.SelectMany(p => p.Addresses).Count();
+            creditCardsCount = persons.SelectMany(p => p.CreditCards).Count();
+            recentPersons = persons.OrderByDescending(p => p.CreatedAt).ToList();
+
+            // Check system health
+            await CheckSystemHealth();
+        }
+        catch (Exception)
+        {
+            healthCheckFailed = true;
+        }
+    }
+
+    private async Task CheckSystemHealth()
+    {
+        try
+        {
+            await ApiService.GetHealthAsync();
+            systemHealthy = true;
+        }
+        catch (Exception)
+        {
+            healthCheckFailed = true;
+        }
+    }
+}

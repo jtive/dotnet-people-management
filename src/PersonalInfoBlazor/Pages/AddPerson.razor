@@ -1,0 +1,617 @@
+@page "/persons/add"
+@using PersonalInfoBlazor.Services
+@using PersonalInfoBlazor.Components
+@using PersonalInfoShared.DTOs
+@inject IPersonalInfoApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Add Person - Personal Info System</PageTitle>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Add New Person</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="person" OnValidSubmit="HandleValidSubmit">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <InputText id="firstName" class="form-control" @bind-Value="person.FirstName" @oninput="OnFirstNameChanged" />
+                                    @if (GetPersonValidationMessage("FirstName") != string.Empty)
+                                    {
+                                        <div class="text-danger">@GetPersonValidationMessage("FirstName")</div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <InputText id="lastName" class="form-control" @bind-Value="person.LastName" @oninput="OnLastNameChanged" />
+                                    @if (GetPersonValidationMessage("LastName") != string.Empty)
+                                    {
+                                        <div class="text-danger">@GetPersonValidationMessage("LastName")</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="birthDate" class="form-label">Birth Date *</label>
+                            <InputDate id="birthDate" class="form-control" @bind-Value="person.BirthDate" @onchange="OnBirthDateChanged" />
+                            @if (GetPersonValidationMessage("BirthDate") != string.Empty)
+                            {
+                                <div class="text-danger">@GetPersonValidationMessage("BirthDate")</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ssn" class="form-label">SSN *</label>
+                            <MaskedInput Id="ssn" 
+                                       Label="" 
+                                       Value="ssnValue" 
+                                       ValueChanged="OnSSNChanged" 
+                                       Type="MaskedInput.InputType.SSN"
+                                       HelpText="Enter your Social Security Number"
+                                       ValidationMessage="@GetSSNValidationMessage()" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label for="streetAddress" class="form-label">Street Address *</label>
+                                                <InputText id="streetAddress" class="form-control" @bind-Value="address.StreetAddress" @oninput="OnStreetAddressChanged" />
+                                                @if (GetAddressValidationMessage("StreetAddress") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetAddressValidationMessage("StreetAddress")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="addressType" class="form-label">Type *</label>
+                                                <InputSelect id="addressType" class="form-select" @bind-Value="address.AddressType" @onchange="OnAddressTypeChanged">
+                                                    <option value="">Select type</option>
+                                                    <option value="Home">Home</option>
+                                                    <option value="Work">Work</option>
+                                                    <option value="Mailing">Mailing</option>
+                                                </InputSelect>
+                                                @if (GetAddressValidationMessage("AddressType") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetAddressValidationMessage("AddressType")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="city" class="form-label">City *</label>
+                                                <InputText id="city" class="form-control" @bind-Value="address.City" @oninput="OnCityChanged" />
+                                                @if (GetAddressValidationMessage("City") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetAddressValidationMessage("City")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="mb-3">
+                                                <label for="state" class="form-label">State *</label>
+                                                <InputText id="state" class="form-control" @bind-Value="address.State" maxlength="2" @oninput="OnStateChanged" />
+                                                @if (GetAddressValidationMessage("State") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetAddressValidationMessage("State")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label for="zipCode" class="form-label">Zip Code *</label>
+                                                <InputText id="zipCode" class="form-control" @bind-Value="address.ZipCode" @oninput="OnZipCodeChanged" />
+                                                @if (GetAddressValidationMessage("ZipCode") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetAddressValidationMessage("ZipCode")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label for="country" class="form-label">Country *</label>
+                                                <InputText id="country" class="form-control" @bind-Value="address.Country" @oninput="OnCountryChanged" />
+                                                @if (GetAddressValidationMessage("Country") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetAddressValidationMessage("Country")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <InputCheckbox id="isPrimary" class="form-check-input" @bind-Value="address.IsPrimary" />
+                                            <label class="form-check-label" for="isPrimary">
+                                                Primary Address
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Credit Card</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="cardType" class="form-label">Card Type *</label>
+                                                <InputSelect id="cardType" class="form-select" @bind-Value="creditCard.CardType" @onchange="OnCardTypeChanged">
+                                                    <option value="">Select card type</option>
+                                                    <option value="Visa">Visa</option>
+                                                    <option value="MasterCard">MasterCard</option>
+                                                    <option value="American Express">American Express</option>
+                                                    <option value="Discover">Discover</option>
+                                                </InputSelect>
+                                                @if (GetCreditCardValidationMessage("CardType") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetCreditCardValidationMessage("CardType")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="cardNumber" class="form-label">Card Number *</label>
+                                                <MaskedInput Id="cardNumber" 
+                                                           Label="" 
+                                                           Value="cardNumberValue" 
+                                                           ValueChanged="OnCardNumberChanged" 
+                                                           Type="MaskedInput.InputType.CreditCard"
+                                                           HelpText="Enter your credit card number"
+                                                           ValidationMessage="@GetCardNumberValidationMessage()" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="expirationMonth" class="form-label">Expiration Month *</label>
+                                                <InputNumber id="expirationMonth" class="form-control" @bind-Value="creditCard.ExpirationMonth" @onchange="OnExpirationMonthChanged" />
+                                                @if (GetCreditCardValidationMessage("ExpirationMonth") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetCreditCardValidationMessage("ExpirationMonth")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="expirationYear" class="form-label">Expiration Year *</label>
+                                                <InputNumber id="expirationYear" class="form-control" @bind-Value="creditCard.ExpirationYear" @onchange="OnExpirationYearChanged" />
+                                                @if (GetCreditCardValidationMessage("ExpirationYear") != string.Empty)
+                                                {
+                                                    <div class="text-danger">@GetCreditCardValidationMessage("ExpirationYear")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <div class="form-check mt-4">
+                                                    <InputCheckbox id="isActive" class="form-check-input" @bind-Value="creditCard.IsActive" />
+                                                    <label class="form-check-label" for="isActive">
+                                                        Active Card
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (errorMessage != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @errorMessage
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                                <i class="oi oi-x"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@loading">
+                                @if (loading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <i class="oi oi-check"></i>
+                                    <span>Save Person</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreatePersonDto person = new();
+    private CreateAddressDto address = new() { Country = "US", AddressType = "Home" };
+    private CreateCreditCardDto creditCard = new();
+    
+    private string ssnValue = string.Empty;
+    private string cardNumberValue = string.Empty;
+    
+    private bool loading = false;
+    private string? errorMessage;
+    
+    private List<string> validationErrors = new();
+
+    private async Task HandleValidSubmit()
+    {
+        // Refresh validation before attempting to submit
+        UpdateValidationErrors();
+        StateHasChanged();
+        
+        // If there are validation errors, don't submit
+        if (validationErrors.Any())
+        {
+            errorMessage = $"Please fix the following errors: {string.Join(", ", validationErrors)}";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            loading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            // Add address if provided
+            if (!string.IsNullOrWhiteSpace(address.StreetAddress))
+            {
+                person.Addresses.Add(address);
+            }
+
+            // Add credit card if provided
+            if (!string.IsNullOrWhiteSpace(creditCard.CardNumber))
+            {
+                person.CreditCards.Add(creditCard);
+            }
+
+            await ApiService.CreatePersonAsync(person);
+            Navigation.NavigateTo("/persons");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create person: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnSSNChanged(string value)
+    {
+        ssnValue = value;
+        // Store raw digits only - formatting handled in UI only
+        person.SSN = value;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnCardNumberChanged(string value)
+    {
+        cardNumberValue = value;
+        creditCard.CardNumber = value;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnFirstNameChanged(ChangeEventArgs e)
+    {
+        person.FirstName = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnLastNameChanged(ChangeEventArgs e)
+    {
+        person.LastName = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnBirthDateChanged(ChangeEventArgs e)
+    {
+        if (e.Value is DateOnly date)
+        {
+            person.BirthDate = date;
+        }
+        else if (e.Value is DateTime dateTime)
+        {
+            person.BirthDate = DateOnly.FromDateTime(dateTime);
+        }
+        else
+        {
+            person.BirthDate = null;
+        }
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnAddressTypeChanged(ChangeEventArgs e)
+    {
+        address.AddressType = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnStreetAddressChanged(ChangeEventArgs e)
+    {
+        address.StreetAddress = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnCityChanged(ChangeEventArgs e)
+    {
+        address.City = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnStateChanged(ChangeEventArgs e)
+    {
+        address.State = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnZipCodeChanged(ChangeEventArgs e)
+    {
+        address.ZipCode = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnCountryChanged(ChangeEventArgs e)
+    {
+        address.Country = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnCardTypeChanged(ChangeEventArgs e)
+    {
+        creditCard.CardType = e.Value?.ToString() ?? string.Empty;
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnExpirationMonthChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int month))
+        {
+            creditCard.ExpirationMonth = month;
+        }
+        else
+        {
+            creditCard.ExpirationMonth = 0;
+        }
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void OnExpirationYearChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int year))
+        {
+            creditCard.ExpirationYear = year;
+        }
+        else
+        {
+            creditCard.ExpirationYear = 0;
+        }
+        UpdateValidationErrors();
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/persons");
+    }
+
+    private void UpdateValidationErrors()
+    {
+        validationErrors.Clear();
+        
+        // Required person fields
+        if (string.IsNullOrWhiteSpace(person.FirstName))
+            validationErrors.Add("First Name is required");
+        
+        if (string.IsNullOrWhiteSpace(person.LastName))
+            validationErrors.Add("Last Name is required");
+        
+        if (person.BirthDate == null)
+            validationErrors.Add("Birth Date is required");
+        
+        if (string.IsNullOrWhiteSpace(ssnValue))
+            validationErrors.Add("SSN is required");
+        
+        // Address validation - only validate if any address field is filled
+        bool hasAddressData = !string.IsNullOrWhiteSpace(address.StreetAddress) || 
+                             !string.IsNullOrWhiteSpace(address.City) || 
+                             !string.IsNullOrWhiteSpace(address.State) || 
+                             !string.IsNullOrWhiteSpace(address.ZipCode) ||
+                             !string.IsNullOrWhiteSpace(address.Country) ||
+                             !string.IsNullOrWhiteSpace(address.AddressType);
+        
+        if (hasAddressData)
+        {
+            if (string.IsNullOrWhiteSpace(address.AddressType))
+                validationErrors.Add("Address Type is required");
+            
+            if (string.IsNullOrWhiteSpace(address.StreetAddress))
+                validationErrors.Add("Street Address is required");
+            
+            if (string.IsNullOrWhiteSpace(address.City))
+                validationErrors.Add("City is required");
+            
+            if (string.IsNullOrWhiteSpace(address.State))
+                validationErrors.Add("State is required");
+            else if (address.State.Length != 2)
+                validationErrors.Add("State must be exactly 2 characters");
+            
+            if (string.IsNullOrWhiteSpace(address.ZipCode))
+                validationErrors.Add("Zip Code is required");
+            else if (!System.Text.RegularExpressions.Regex.IsMatch(address.ZipCode, @"^\d{5}(-\d{4})?$"))
+                validationErrors.Add("Zip Code must be in format 12345 or 12345-6789");
+            
+            if (string.IsNullOrWhiteSpace(address.Country))
+                validationErrors.Add("Country is required");
+            else if (address.Country.Length != 2)
+                validationErrors.Add("Country must be exactly 2 characters");
+        }
+        
+        // Credit card validation - only validate if any credit card field is filled
+        bool hasCreditCardData = !string.IsNullOrWhiteSpace(creditCard.CardType) || 
+                                !string.IsNullOrWhiteSpace(cardNumberValue) ||
+                                creditCard.ExpirationMonth > 0 ||
+                                creditCard.ExpirationYear > 0;
+        
+        if (hasCreditCardData)
+        {
+            if (string.IsNullOrWhiteSpace(creditCard.CardType))
+                validationErrors.Add("Card Type is required");
+            
+            if (string.IsNullOrWhiteSpace(cardNumberValue))
+                validationErrors.Add("Card Number is required");
+            else
+            {
+                var digitsOnly = System.Text.RegularExpressions.Regex.Replace(cardNumberValue, @"[^\d]", "");
+                if (digitsOnly.Length < 13 || digitsOnly.Length > 19)
+                    validationErrors.Add("Card Number must be 13-19 digits");
+            }
+            
+            if (creditCard.ExpirationMonth <= 0)
+                validationErrors.Add("Expiration Month is required");
+            else if (creditCard.ExpirationMonth < 1 || creditCard.ExpirationMonth > 12)
+                validationErrors.Add("Expiration Month must be between 1 and 12");
+            
+            if (creditCard.ExpirationYear <= 0)
+                validationErrors.Add("Expiration Year is required");
+            else if (creditCard.ExpirationYear < 2024 || creditCard.ExpirationYear > 2030)
+                validationErrors.Add("Expiration Year must be between 2024 and 2030");
+        }
+    }
+
+    private string GetPersonValidationMessage(string fieldName)
+    {
+        return fieldName switch
+        {
+            "FirstName" => string.IsNullOrWhiteSpace(person.FirstName) ? "First Name is required" : 
+                          person.FirstName.Length > 50 ? "First Name cannot exceed 50 characters" : string.Empty,
+            "LastName" => string.IsNullOrWhiteSpace(person.LastName) ? "Last Name is required" : 
+                         person.LastName.Length > 50 ? "Last Name cannot exceed 50 characters" : string.Empty,
+            "BirthDate" => person.BirthDate == null ? "Birth Date is required" : string.Empty,
+            _ => string.Empty
+        };
+    }
+
+    private string GetSSNValidationMessage()
+    {
+        if (string.IsNullOrWhiteSpace(ssnValue))
+            return "SSN is required";
+        
+        if (ssnValue.Length != 9)
+            return "SSN must be 9 digits";
+        
+        return string.Empty;
+    }
+
+    private string GetCardNumberValidationMessage()
+    {
+        if (string.IsNullOrWhiteSpace(cardNumberValue))
+            return "Card Number is required";
+        
+        var digitsOnly = System.Text.RegularExpressions.Regex.Replace(cardNumberValue, @"[^\d]", "");
+        if (digitsOnly.Length < 13 || digitsOnly.Length > 19)
+            return "Card Number must be 13-19 digits";
+        
+        return string.Empty;
+    }
+
+    private string GetAddressValidationMessage(string fieldName)
+    {
+        // Check if any address data is entered
+        bool hasAddressData = !string.IsNullOrWhiteSpace(address.StreetAddress) || 
+                             !string.IsNullOrWhiteSpace(address.City) || 
+                             !string.IsNullOrWhiteSpace(address.State) || 
+                             !string.IsNullOrWhiteSpace(address.ZipCode) ||
+                             !string.IsNullOrWhiteSpace(address.Country) ||
+                             !string.IsNullOrWhiteSpace(address.AddressType);
+        
+        if (!hasAddressData)
+            return string.Empty; // No validation if no address data is entered
+            
+        return fieldName switch
+        {
+            "AddressType" => string.IsNullOrWhiteSpace(address.AddressType) ? "Address Type is required" : string.Empty,
+            "StreetAddress" => string.IsNullOrWhiteSpace(address.StreetAddress) ? "Street Address is required" : string.Empty,
+            "City" => string.IsNullOrWhiteSpace(address.City) ? "City is required" : string.Empty,
+            "State" => string.IsNullOrWhiteSpace(address.State) ? "State is required" : 
+                      address.State.Length != 2 ? "State must be exactly 2 characters" : string.Empty,
+            "ZipCode" => string.IsNullOrWhiteSpace(address.ZipCode) ? "Zip Code is required" :
+                        !System.Text.RegularExpressions.Regex.IsMatch(address.ZipCode, @"^\d{5}(-\d{4})?$") ? 
+                        "Zip Code must be in format 12345 or 12345-6789" : string.Empty,
+            "Country" => string.IsNullOrWhiteSpace(address.Country) ? "Country is required" :
+                        address.Country.Length != 2 ? "Country must be exactly 2 characters" : string.Empty,
+            _ => string.Empty
+        };
+    }
+
+    private string GetCreditCardValidationMessage(string fieldName)
+    {
+        // Check if any credit card data is entered
+        bool hasCreditCardData = !string.IsNullOrWhiteSpace(creditCard.CardType) || 
+                                !string.IsNullOrWhiteSpace(cardNumberValue) ||
+                                creditCard.ExpirationMonth > 0 ||
+                                creditCard.ExpirationYear > 0;
+        
+        if (!hasCreditCardData)
+            return string.Empty; // No validation if no credit card data is entered
+            
+        return fieldName switch
+        {
+            "CardType" => string.IsNullOrWhiteSpace(creditCard.CardType) ? "Card Type is required" : string.Empty,
+            "ExpirationMonth" => creditCard.ExpirationMonth <= 0 ? "Expiration Month is required" :
+                               creditCard.ExpirationMonth < 1 || creditCard.ExpirationMonth > 12 ? 
+                               "Expiration Month must be between 1 and 12" : string.Empty,
+            "ExpirationYear" => creditCard.ExpirationYear <= 0 ? "Expiration Year is required" :
+                              creditCard.ExpirationYear < 2024 || creditCard.ExpirationYear > 2030 ? 
+                              "Expiration Year must be between 2024 and 2030" : string.Empty,
+            _ => string.Empty
+        };
+    }
+
+    protected override void OnParametersSet()
+    {
+        UpdateValidationErrors();
+    }
+}

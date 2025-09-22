@@ -1,0 +1,134 @@
+@page "/persons"
+@using PersonalInfoBlazor.Services
+@using PersonalInfoBlazor.Components
+@using PersonalInfoShared.DTOs
+@inject IPersonalInfoApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Persons - Personal Info System</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Persons</h2>
+                <button class="btn btn-primary" @onclick="AddPerson">
+                    <i class="oi oi-plus"></i> Add Person
+                </button>
+            </div>
+
+            @if (loading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading persons...</p>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Error!</h4>
+                    <p>@errorMessage</p>
+                    <hr>
+                    <button class="btn btn-outline-danger" @onclick="LoadPersons">Try Again</button>
+                </div>
+            }
+            else
+            {
+                @if (persons.Any())
+                {
+                    <div class="row">
+                        @foreach (var person in persons)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <PersonCard Person="person" 
+                                           OnEdit="EditPerson" 
+                                           OnView="ViewPerson" 
+                                           OnDelete="DeletePerson" />
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="oi oi-person display-1 text-muted"></i>
+                        <h3 class="text-muted">No persons found</h3>
+                        <p class="text-muted">Get started by adding your first person.</p>
+                        <button class="btn btn-primary" @onclick="AddPerson">
+                            <i class="oi oi-plus"></i> Add Person
+                        </button>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<PersonDto> persons = new();
+    private bool loading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPersons();
+    }
+
+    private async Task LoadPersons()
+    {
+        try
+        {
+            loading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            var result = await ApiService.GetPersonsAsync();
+            persons = result.ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load persons: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void AddPerson()
+    {
+        Navigation.NavigateTo("/persons/add");
+    }
+
+    private void EditPerson(Guid id)
+    {
+        Navigation.NavigateTo($"/persons/edit/{id}");
+    }
+
+    private void ViewPerson(Guid id)
+    {
+        Navigation.NavigateTo($"/persons/{id}");
+    }
+
+    private async Task DeletePerson(Guid id)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this person?"))
+        {
+            try
+            {
+                await ApiService.DeletePersonAsync(id);
+                await LoadPersons();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to delete person: {ex.Message}";
+                StateHasChanged();
+            }
+        }
+    }
+}
