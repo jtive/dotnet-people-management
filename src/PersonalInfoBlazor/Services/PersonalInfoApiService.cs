@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using PersonalInfoShared.DTOs;
 
 namespace PersonalInfoBlazor.Services;
@@ -21,7 +22,11 @@ public class PersonalInfoApiService : IPersonalInfoApiService
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
+            Converters = { 
+                new JsonStringEnumConverter(),
+                new FlexibleDateTimeConverter()
+            }
         };
     }
 
@@ -31,7 +36,20 @@ public class PersonalInfoApiService : IPersonalInfoApiService
         var response = await _httpClient.GetAsync("/api/person");
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<IEnumerable<PersonDto>>(json, _jsonOptions) ?? new List<PersonDto>();
+        
+        // Log the raw JSON to see the date format
+        Console.WriteLine($"Raw JSON from API: {json}");
+        
+        try
+        {
+            return JsonSerializer.Deserialize<IEnumerable<PersonDto>>(json, _jsonOptions) ?? new List<PersonDto>();
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"JSON Deserialization Error: {ex.Message}");
+            Console.WriteLine($"Problematic JSON: {json}");
+            throw;
+        }
     }
 
     public async Task<PersonDto?> GetPersonAsync(Guid id)
@@ -171,5 +189,70 @@ public class PersonalInfoApiService : IPersonalInfoApiService
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<HealthDto>(json, _jsonOptions)!;
+    }
+}
+
+// Custom DateTime converter to handle various date formats
+public class FlexibleDateTimeConverter : JsonConverter<DateTime>
+{
+    private static readonly string[] DateFormats = {
+        "yyyy-MM-ddTHH:mm:ss.fffZ",
+        "yyyy-MM-ddTHH:mm:ssZ",
+        "yyyy-MM-ddTHH:mm:ss.fff",
+        "yyyy-MM-ddTHH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd",
+        "MM/dd/yyyy",
+        "dd/MM/yyyy",
+        "yyyy-MM-ddTHH:mm:ss.fffK", // With timezone offset
+        "yyyy-MM-ddTHH:mm:ssK",     // With timezone offset
+        "yyyy-MM-ddTHH:mm:ss.fffzzz", // With timezone
+        "yyyy-MM-ddTHH:mm:sszzz"    // With timezone
+    };
+
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var dateString = reader.GetString();
+            Console.WriteLine($"Trying to parse date string: '{dateString}'");
+            
+            if (string.IsNullOrEmpty(dateString))
+                return DateTime.MinValue;
+
+            // Try parsing with different formats
+            foreach (var format in DateFormats)
+            {
+                if (DateTime.TryParseExact(dateString, format, null, System.Globalization.DateTimeStyles.None, out var result))
+                {
+                    Console.WriteLine($"Successfully parsed date '{dateString}' using format '{format}' -> {result}");
+                    return result;
+                }
+            }
+
+            // Fallback to standard DateTime parsing
+            if (DateTime.TryParse(dateString, out var fallbackResult))
+            {
+                Console.WriteLine($"Successfully parsed date '{dateString}' using fallback parsing -> {fallbackResult}");
+                return fallbackResult;
+            }
+
+            Console.WriteLine($"Failed to parse date: '{dateString}'");
+            throw new JsonException($"Unable to parse date: {dateString}");
+        }
+
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            // Handle Unix timestamp
+            var timestamp = reader.GetInt64();
+            return DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
+        }
+
+        throw new JsonException($"Unexpected token type: {reader.TokenType}");
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
     }
 }

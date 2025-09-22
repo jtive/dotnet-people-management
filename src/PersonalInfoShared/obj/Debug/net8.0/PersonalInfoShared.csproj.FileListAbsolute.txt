@@ -7,9 +7,9 @@ D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.Ge
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.AssemblyInfoInputs.cache
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.AssemblyInfo.cs
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.csproj.CoreCompileInputs.cache
+D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.sourcelink.json
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.dll
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\refint\PersonalInfoShared.dll
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.pdb
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.genruntimeconfig.cache
 D:\dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\ref\PersonalInfoShared.dll
-D:\Dev\play-ground\src\PersonalInfoShared\obj\Debug\net8.0\PersonalInfoShared.sourcelink.json

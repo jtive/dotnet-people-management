@@ -10,11 +10,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
 // Configure SignalR for AWS App Runner
-builder.Services.AddSignalR(options =>
-{
-    // Disable WebSockets for App Runner compatibility
-    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-});
+builder.Services.AddSignalR();
 
 // Add HTTP client for API communication
 builder.Services.AddHttpClient<IPersonalInfoApiService, PersonalInfoApiService>();
@@ -38,11 +34,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.MapBlazorHub(options =>
-{
-    // Configure Blazor Hub for App Runner
-    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
-});
+app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
