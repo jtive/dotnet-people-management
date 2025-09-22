@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PersonalInfoShared.Data;
 using PersonalInfoShared.Services;
+using PersonalInfoApi.Services;
+using PersonalInfoApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5000", "https://localhost:5001")
+        policy.WithOrigins(
+                "http://localhost:5000", 
+                "https://localhost:5001",
+                "https://*.awsapprunner.com"  // Allow any App Runner URL
+              )
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -40,6 +46,7 @@ static string BuildConnectionString(IConfiguration configuration)
 // Register services
 builder.Services.AddScoped<IDataMaskingService, DataMaskingService>();
 builder.Services.AddScoped<IMappingService, MappingService>();
+builder.Services.AddSingleton<IRateLimitService, RateLimitService>();
 
 var app = builder.Build();
 
@@ -52,6 +59,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowBlazorApp");
+
+// Add rate limiting middleware
+app.UseMiddleware<RateLimitMiddleware>();
+
 app.UseAuthorization();
 app.MapControllers();
 

@@ -12,7 +12,10 @@ public class PersonalInfoApiService : IPersonalInfoApiService
     public PersonalInfoApiService(HttpClient httpClient, IConfiguration configuration)
     {
         _httpClient = httpClient;
-        var baseUrl = configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5188";
+        // Check environment variable first, then configuration, then default
+        var baseUrl = Environment.GetEnvironmentVariable("API_BASE_URL") 
+                     ?? configuration["ApiSettings:BaseUrl"] 
+                     ?? "http://localhost:5188";
         _httpClient.BaseAddress = new Uri(baseUrl);
         
         _jsonOptions = new JsonSerializerOptions
